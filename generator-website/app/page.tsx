@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface MemoryPair {
   id: number;
@@ -13,6 +13,26 @@ export default function MemoryGenerator() {
   const [pairs, setPairs] = useState<MemoryPair[]>([
     { id: 1, text1: "", text2: "" }
   ]);
+
+  // Load from localStorage on component mount
+  useEffect(() => {
+    const savedPairs = localStorage.getItem('memory-game-pairs');
+    if (savedPairs) {
+      try {
+        const parsedPairs = JSON.parse(savedPairs);
+        if (Array.isArray(parsedPairs) && parsedPairs.length > 0) {
+          setPairs(parsedPairs);
+        }
+      } catch (error) {
+        console.error('Error loading saved pairs:', error);
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever pairs change
+  useEffect(() => {
+    localStorage.setItem('memory-game-pairs', JSON.stringify(pairs));
+  }, [pairs]);
 
   const addPair = () => {
     const newId = Math.max(...pairs.map(p => p.id)) + 1;
@@ -29,6 +49,12 @@ export default function MemoryGenerator() {
     setPairs(pairs.map(p => 
       p.id === id ? { ...p, [field]: value } : p
     ));
+  };
+
+  const resetPairs = () => {
+    if (confirm('Sind Sie sicher, dass Sie alle Eingaben zurücksetzen möchten?')) {
+      setPairs([{ id: 1, text1: "", text2: "" }]);
+    }
   };
 
   const getTextSizeClass = (text: string) => {
@@ -63,7 +89,7 @@ export default function MemoryGenerator() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Memory Cards</title>
+          <title>Memory-Karten</title>
           <style>
             @page { 
               size: A4; 
@@ -183,34 +209,34 @@ export default function MemoryGenerator() {
   return (
     <div className="container mx-auto p-6 max-w-4xl bg-white min-h-screen">
       <h1 className="text-3xl font-bold text-center mb-8 text-green-600">
-        Memory Game Generator
+        Memory-Spiel Generator
       </h1>
       
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4 text-black">Text Pairs</h2>
+        <h2 className="text-xl font-semibold mb-4 text-black">Textpaare</h2>
         
         <div className="space-y-4">
           {pairs.map((pair) => (
             <div key={pair.id} className="flex gap-4 items-end border-b pb-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium mb-1 text-black">Card 1</label>
+                <label className="block text-sm font-medium mb-1 text-black">Karte 1</label>
                 <input
                   type="text"
                   value={pair.text1}
                   onChange={(e) => updatePair(pair.id, 'text1', e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
-                  placeholder="Enter text for first card"
+                  placeholder="Text für die erste Karte eingeben"
                 />
               </div>
               
               <div className="flex-1">
-                <label className="block text-sm font-medium mb-1 text-black">Card 2</label>
+                <label className="block text-sm font-medium mb-1 text-black">Karte 2</label>
                 <input
                   type="text"
                   value={pair.text2}
                   onChange={(e) => updatePair(pair.id, 'text2', e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
-                  placeholder="Enter text for second card"
+                  placeholder="Text für die zweite Karte eingeben"
                 />
               </div>
               
@@ -219,7 +245,7 @@ export default function MemoryGenerator() {
                 disabled={pairs.length === 1}
                 className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Remove
+                Entfernen
               </button>
             </div>
           ))}
@@ -230,7 +256,14 @@ export default function MemoryGenerator() {
             onClick={addPair}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
           >
-            Add Pair
+            Paar hinzufügen
+          </button>
+          
+          <button
+            onClick={resetPairs}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            Zurücksetzen
           </button>
           
           <button
@@ -238,17 +271,17 @@ export default function MemoryGenerator() {
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             disabled={!pairs.some(p => p.text1.trim() && p.text2.trim())}
           >
-            Print Cards (A6)
+            Karten drucken (A4)
           </button>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-xl font-semibold mb-4 text-black">Preview</h2>
+        <h2 className="text-xl font-semibold mb-4 text-black">Vorschau</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h3 className="font-medium mb-2 text-black">Backside Template</h3>
+            <h3 className="font-medium mb-2 text-black">Rückseiten-Vorlage</h3>
             <div className="border rounded-lg overflow-hidden">
               <Image 
                 src="/backside.png" 
@@ -261,7 +294,7 @@ export default function MemoryGenerator() {
           </div>
           
           <div>
-            <h3 className="font-medium mb-2 text-black">Frontside Template</h3>
+            <h3 className="font-medium mb-2 text-black">Vorderseiten-Vorlage</h3>
             <div className="border rounded-lg overflow-hidden">
               <Image 
                 src="/template.png" 
@@ -276,7 +309,7 @@ export default function MemoryGenerator() {
 
         {pairs.some(p => p.text1.trim() || p.text2.trim()) && (
           <div className="mt-6">
-            <h3 className="font-medium mb-4 text-black">Preview with Text</h3>
+            <h3 className="font-medium mb-4 text-black">Vorschau mit Text</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {pairs.filter(p => p.text1.trim() || p.text2.trim()).map(pair => (
                 <div key={pair.id} className="space-y-2">
