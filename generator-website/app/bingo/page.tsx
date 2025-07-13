@@ -282,27 +282,32 @@ export default function BingoGenerator() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl bg-white min-h-screen">
-      <div className="flex justify-center mb-6">
-        <div className="flex space-x-4">
-          <a
-            href="/"
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          >
-            Memory Generator
-          </a>
-          <a
-            href="/bingo"
-            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-          >
-            BINGO Generator
-          </a>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="container mx-auto px-6 py-4">
+          <nav className="flex items-center justify-between">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-xl font-bold text-gray-800">Lebenshilfe Generator</h1>
+              <div className="flex space-x-1">
+                <a
+                  href="/"
+                  className="px-4 py-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                >
+                  Memory Generator
+                </a>
+                <a
+                  href="/bingo"
+                  className="px-4 py-2 text-white bg-purple-600 rounded-md font-medium"
+                >
+                  BINGO Generator
+                </a>
+              </div>
+            </div>
+          </nav>
         </div>
-      </div>
+      </header>
       
-      <h1 className="text-3xl font-bold text-center mb-8 text-green-600">
-        BINGO Generator
-      </h1>
+      <div className="container mx-auto p-6 max-w-4xl">
       
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4 text-black">BINGO Felder</h2>
@@ -605,6 +610,7 @@ export default function BingoGenerator() {
           {" "}für die Lebenshilfe Kärnten
         </p>
       </footer>
+      </div>
     </div>
   );
 }
