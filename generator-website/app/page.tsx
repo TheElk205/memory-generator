@@ -7,12 +7,17 @@ interface MemoryPair {
   id: number;
   text1: string;
   text2: string;
+  text1Size: number;
+  text2Size: number;
 }
 
 export default function MemoryGenerator() {
   const [pairs, setPairs] = useState<MemoryPair[]>([
-    { id: 1, text1: "", text2: "" }
+    { id: 1, text1: "", text2: "", text1Size: 18, text2Size: 18 }
   ]);
+  const [backsideImage, setBacksideImage] = useState<string>('/backside.png');
+  const [frontsideImage, setFrontsideImage] = useState<string>('/template.png');
+  const [advancedMode, setAdvancedMode] = useState<boolean>(false);
 
   // Load from localStorage on component mount
   useEffect(() => {
@@ -27,6 +32,21 @@ export default function MemoryGenerator() {
         console.error('Error loading saved pairs:', error);
       }
     }
+
+    const savedBacksideImage = localStorage.getItem('memory-game-backside-image');
+    if (savedBacksideImage) {
+      setBacksideImage(savedBacksideImage);
+    }
+
+    const savedFrontsideImage = localStorage.getItem('memory-game-frontside-image');
+    if (savedFrontsideImage) {
+      setFrontsideImage(savedFrontsideImage);
+    }
+
+    const savedAdvancedMode = localStorage.getItem('memory-game-advanced-mode');
+    if (savedAdvancedMode) {
+      setAdvancedMode(JSON.parse(savedAdvancedMode));
+    }
   }, []);
 
   // Save to localStorage whenever pairs change
@@ -34,9 +54,22 @@ export default function MemoryGenerator() {
     localStorage.setItem('memory-game-pairs', JSON.stringify(pairs));
   }, [pairs]);
 
+  // Save images to localStorage
+  useEffect(() => {
+    localStorage.setItem('memory-game-backside-image', backsideImage);
+  }, [backsideImage]);
+
+  useEffect(() => {
+    localStorage.setItem('memory-game-frontside-image', frontsideImage);
+  }, [frontsideImage]);
+
+  useEffect(() => {
+    localStorage.setItem('memory-game-advanced-mode', JSON.stringify(advancedMode));
+  }, [advancedMode]);
+
   const addPair = () => {
     const newId = Math.max(...pairs.map(p => p.id)) + 1;
-    setPairs([...pairs, { id: newId, text1: "", text2: "" }]);
+    setPairs([...pairs, { id: newId, text1: "", text2: "", text1Size: 18, text2Size: 18 }]);
   };
 
   const removePair = (id: number) => {
@@ -51,9 +84,38 @@ export default function MemoryGenerator() {
     ));
   };
 
+  const updateTextSize = (id: number, field: 'text1Size' | 'text2Size', value: number) => {
+    setPairs(pairs.map(p => 
+      p.id === id ? { ...p, [field]: value } : p
+    ));
+  };
+
   const resetPairs = () => {
     if (confirm('Sind Sie sicher, dass Sie alle Eingaben zurücksetzen möchten?')) {
-      setPairs([{ id: 1, text1: "", text2: "" }]);
+      setPairs([{ id: 1, text1: "", text2: "", text1Size: 18, text2Size: 18 }]);
+    }
+  };
+
+  const handleImageUpload = (type: 'backside' | 'frontside', event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (type === 'backside') {
+          setBacksideImage(result);
+        } else {
+          setFrontsideImage(result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const resetImages = () => {
+    if (confirm('Möchten Sie die Bilder auf die Standardvorlagen zurücksetzen?')) {
+      setBacksideImage('/backside.png');
+      setFrontsideImage('/template.png');
     }
   };
 
@@ -71,16 +133,13 @@ export default function MemoryGenerator() {
     const baseURL = window.location.origin;
 
     // Create all card sides (frontside and backside for each pair)
-    const allCardSides: Array<{type: 'frontside' | 'backside', text?: string, sizeClass?: string}> = [];
+    const allCardSides: Array<{type: 'frontside' | 'backside', text?: string, fontSize?: number}> = [];
     
     cards.forEach(pair => {
-      const text1SizeClass = getTextSizeClass(pair.text1);
-      const text2SizeClass = getTextSizeClass(pair.text2);
-      
       allCardSides.push(
-        { type: 'frontside', text: pair.text1, sizeClass: text1SizeClass },
+        { type: 'frontside', text: pair.text1, fontSize: pair.text1Size },
         { type: 'backside' },
-        { type: 'frontside', text: pair.text2, sizeClass: text2SizeClass },
+        { type: 'frontside', text: pair.text2, fontSize: pair.text2Size },
         { type: 'backside' }
       );
     });
@@ -140,9 +199,6 @@ export default function MemoryGenerator() {
               z-index: 10;
               position: absolute;
             }
-            .card-text.short { font-size: 20px; }
-            .card-text.medium { font-size: 16px; }
-            .card-text.long { font-size: 12px; }
           </style>
           <script>
             // Preload images
@@ -156,11 +212,11 @@ export default function MemoryGenerator() {
               const frontsideCards = document.querySelectorAll('.frontside');
               
               backsideCards.forEach(card => {
-                card.style.backgroundImage = 'url(${baseURL}/backside.png)';
+                card.style.backgroundImage = 'url(${backsideImage.startsWith('/') ? baseURL + backsideImage : backsideImage})';
               });
               
               frontsideCards.forEach(card => {
-                card.style.backgroundImage = 'url(${baseURL}/template.png)';
+                card.style.backgroundImage = 'url(${frontsideImage.startsWith('/') ? baseURL + frontsideImage : frontsideImage})';
               });
               
               setTimeout(() => {
@@ -182,7 +238,7 @@ export default function MemoryGenerator() {
         if (card.type === 'frontside') {
           printWindow.document.write(`
             <div class="card frontside">
-              <div class="card-text ${card.sizeClass}">${card.text}</div>
+              <div class="card-text" style="font-size: ${card.fontSize}px;">${card.text}</div>
             </div>
           `);
         } else {
@@ -267,6 +323,13 @@ export default function MemoryGenerator() {
           </button>
           
           <button
+            onClick={() => setAdvancedMode(!advancedMode)}
+            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+          >
+            {advancedMode ? 'Einfacher Modus' : 'Erweiterter Modus'}
+          </button>
+          
+          <button
             onClick={handlePrint}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             disabled={!pairs.some(p => p.text1.trim() && p.text2.trim())}
@@ -281,10 +344,23 @@ export default function MemoryGenerator() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h3 className="font-medium mb-2 text-black">Rückseiten-Vorlage</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium text-black">Rückseiten-Vorlage</h3>
+              {advancedMode && (
+                <label className="bg-green-500 text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-600">
+                  Ändern
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('backside', e)}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
             <div className="border rounded-lg overflow-hidden">
               <Image 
-                src="/backside.png" 
+                src={backsideImage} 
                 alt="Card backside" 
                 width={200} 
                 height={280}
@@ -294,10 +370,23 @@ export default function MemoryGenerator() {
           </div>
           
           <div>
-            <h3 className="font-medium mb-2 text-black">Vorderseiten-Vorlage</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium text-black">Vorderseiten-Vorlage</h3>
+              {advancedMode && (
+                <label className="bg-green-500 text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-600">
+                  Ändern
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('frontside', e)}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
             <div className="border rounded-lg overflow-hidden">
               <Image 
-                src="/template.png" 
+                src={frontsideImage} 
                 alt="Card template" 
                 width={200} 
                 height={280}
@@ -307,48 +396,93 @@ export default function MemoryGenerator() {
           </div>
         </div>
 
+        {advancedMode && (
+          <div className="mt-4">
+            <button
+              onClick={resetImages}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm"
+            >
+              Bilder zurücksetzen
+            </button>
+          </div>
+        )}
+
         {pairs.some(p => p.text1.trim() || p.text2.trim()) && (
           <div className="mt-6">
             <h3 className="font-medium mb-4 text-black">Vorschau mit Text</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {pairs.filter(p => p.text1.trim() || p.text2.trim()).map(pair => (
-                <div key={pair.id} className="space-y-2">
+                <div key={pair.id} className="space-y-4">
                   {pair.text1.trim() && (
-                    <div className="relative border rounded-lg overflow-hidden">
-                      <Image 
-                        src="/template.png" 
-                        alt="Card template" 
-                        width={150} 
-                        height={210}
-                        className="w-full h-auto"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center p-4">
-                        <span className={`text-center font-bold text-black leading-tight transform rotate-[270deg] ${
-                          pair.text1.length <= 10 ? 'text-xl' : 
-                          pair.text1.length <= 20 ? 'text-lg' : 'text-sm'
-                        }`}>
-                          {pair.text1}
-                        </span>
+                    <div className="space-y-2">
+                      <div className="relative border rounded-lg overflow-hidden">
+                        <Image 
+                          src={frontsideImage} 
+                          alt="Card template" 
+                          width={150} 
+                          height={210}
+                          className="w-full h-auto"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                          <span 
+                            className="text-center font-bold text-black leading-tight transform rotate-[270deg]"
+                            style={{ fontSize: `${Math.max(8, pair.text1Size * 0.75)}px` }}
+                          >
+                            {pair.text1}
+                          </span>
+                        </div>
                       </div>
+                      {advancedMode && (
+                        <div>
+                          <label className="block text-xs font-medium mb-1 text-black">
+                            Karte 1 Textgröße: {pair.text1Size}px
+                          </label>
+                          <input
+                            type="range"
+                            min="8"
+                            max="32"
+                            value={pair.text1Size}
+                            onChange={(e) => updateTextSize(pair.id, 'text1Size', parseInt(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                   {pair.text2.trim() && (
-                    <div className="relative border rounded-lg overflow-hidden">
-                      <Image 
-                        src="/template.png" 
-                        alt="Card template" 
-                        width={150} 
-                        height={210}
-                        className="w-full h-auto"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center p-4">
-                        <span className={`text-center font-bold text-black leading-tight transform rotate-[270deg] ${
-                          pair.text2.length <= 10 ? 'text-xl' : 
-                          pair.text2.length <= 20 ? 'text-lg' : 'text-sm'
-                        }`}>
-                          {pair.text2}
-                        </span>
+                    <div className="space-y-2">
+                      <div className="relative border rounded-lg overflow-hidden">
+                        <Image 
+                          src={frontsideImage} 
+                          alt="Card template" 
+                          width={150} 
+                          height={210}
+                          className="w-full h-auto"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                          <span 
+                            className="text-center font-bold text-black leading-tight transform rotate-[270deg]"
+                            style={{ fontSize: `${Math.max(8, pair.text2Size * 0.75)}px` }}
+                          >
+                            {pair.text2}
+                          </span>
+                        </div>
                       </div>
+                      {advancedMode && (
+                        <div>
+                          <label className="block text-xs font-medium mb-1 text-black">
+                            Karte 2 Textgröße: {pair.text2Size}px
+                          </label>
+                          <input
+                            type="range"
+                            min="8"
+                            max="32"
+                            value={pair.text2Size}
+                            onChange={(e) => updateTextSize(pair.id, 'text2Size', parseInt(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
