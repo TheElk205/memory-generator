@@ -264,6 +264,23 @@ export default function MemoryGenerator() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl bg-white min-h-screen">
+      <div className="flex justify-center mb-6">
+        <div className="flex space-x-4">
+          <a
+            href="/"
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            Memory Generator
+          </a>
+          <a
+            href="/bingo"
+            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+          >
+            BINGO Generator
+          </a>
+        </div>
+      </div>
+      
       <h1 className="text-3xl font-bold text-center mb-8 text-green-600">
         Memory-Spiel Generator
       </h1>
