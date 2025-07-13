@@ -232,6 +232,38 @@ export default function BingoGenerator() {
               color: #000;
               line-height: 1.2;
             }
+            .backside-table {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(270deg);
+              width: 95%;
+              height: 65%;
+              font-size: ${textSize * 0.75}rem;
+              font-weight: bold;
+              color: #000;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .backside-table table {
+              width: 100%;
+              height: 100%;
+              border-collapse: collapse;
+            }
+            .backside-table td {
+              text-align: left;
+              vertical-align: top;
+              border: none;
+              line-height: 1.0;
+            }
+            .backside-table .field-number {
+              font-weight: bold;
+              min-width: 45px;
+            }
+            .backside-table .field-text {
+              font-weight: normal;
+            }
           </style>
           <script>
             window.onload = function() {
@@ -273,7 +305,23 @@ export default function BingoGenerator() {
             </div>
           </div>
           
-          <div class="bingo-card backside"></div>
+          <div class="bingo-card backside">
+            <div class="backside-table">
+              <table>
+                ${displayOrder.map((fieldId) => {
+                  const field = fields.find(f => f.id === fieldId);
+                  const shortText = field?.shortText || '';
+                  const fullText = field?.fullText || '';
+                  return `
+                    <tr>
+                      <td class="field-number">Feld ${fieldId}:</td>
+                      <td class="field-text">${shortText}${fullText && shortText !== fullText ? ' - ' + fullText : (fullText || '')}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </table>
+            </div>
+          </div>
         </body>
       </html>
     `);
