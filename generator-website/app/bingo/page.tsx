@@ -29,10 +29,12 @@ export default function BingoGenerator() {
   const [horizontalShift, setHorizontalShift] = useState<number>(4);
   const [verticalScaling, setVerticalScaling] = useState<number>(54);
   const [verticalShift, setverticalShift] = useState<number>(30);
+  const [textSize, setTextSize] = useState<number>(1.1);
+  const [displayOrder, setDisplayOrder] = useState<number[]>([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
-  const scale = 3; // Scale up from 200px preview to 600px print
   const baseSize = 200; // Actual preview image size
-  const scaledSize = baseSize * scale;
+  const printHeight = 600; // Fixed print height
+  const scale = printHeight / baseSize; // Dynamic scale based on print height
 
   useEffect(() => {
     const savedFields = localStorage.getItem('bingo-fields');
@@ -72,6 +74,11 @@ export default function BingoGenerator() {
     if (savedVerticalSpacing) {
       setVerticalScaling(parseInt(savedVerticalSpacing));
     }
+
+    const savedTextSize = localStorage.getItem('bingo-text-size');
+    if (savedTextSize) {
+      setTextSize(parseInt(savedTextSize));
+    }
   }, []);
 
   useEffect(() => {
@@ -98,6 +105,10 @@ export default function BingoGenerator() {
     localStorage.setItem('bingo-vertical-spacing', verticalScaling.toString());
   }, [verticalScaling]);
 
+  useEffect(() => {
+    localStorage.setItem('bingo-text-size', textSize.toString());
+  }, [textSize]);
+
   const updateField = (id: number, field: 'fullText' | 'shortText', value: string) => {
     setFields(fields.map(f => 
       f.id === id ? { ...f, [field]: value } : f
@@ -117,6 +128,11 @@ export default function BingoGenerator() {
         { id: 8, fullText: "", shortText: "", isFixed: false },
         { id: 9, fullText: "", shortText: "", isFixed: false }
       ]);
+      setHorizontalScaling(90);
+      setHorizontalShift(4);
+      setVerticalScaling(54);
+      setverticalShift(30);
+      setTextSize(1.1);
     }
   };
 
@@ -143,24 +159,22 @@ export default function BingoGenerator() {
     }
   };
 
+  const randomizeFields = () => {
+    const shuffled = [...displayOrder].sort(() => Math.random() - 0.5);
+    setDisplayOrder(shuffled);
+  };
+
+  const resetFieldOrder = () => {
+    setDisplayOrder([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
     const baseURL = window.location.origin;
     
-    // Use direct spacing calculations based on preview size
-    
-    
-    // Calculate scaled spacing values
-    const scaledPaddingTop = Math.max(0, verticalScaling) * scale;
-    const scaledPaddingRight = Math.max(0, horizontalScaling) * scale;
-    const scaledPaddingBottom = Math.max(0, verticalScaling) * scale;
-    const scaledPaddingLeft = Math.max(0, horizontalScaling) * scale;
-    const scaledMarginTop = Math.min(0, verticalScaling) * scale;
-    const scaledMarginRight = Math.min(0, horizontalScaling) * scale;
-    const scaledMarginBottom = Math.min(0, verticalScaling) * scale;
-    const scaledMarginLeft = Math.min(0, horizontalScaling) * scale;
+    // Use the same percentage-based positioning as the preview
     
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -169,7 +183,7 @@ export default function BingoGenerator() {
           <title>BINGO-Karten</title>
           <style>
             @page { 
-              size: A4; 
+              size: A4 landscape; 
               margin: 10mm; 
             }
             @media print {
@@ -186,8 +200,9 @@ export default function BingoGenerator() {
             }
             .bingo-card {
               position: relative;
-              width: ${scaledSize}px;
-              height: ${scaledSize}px;
+              height: ${printHeight}px;
+              width: auto;
+              aspect-ratio: var(--card-aspect-ratio, 1);
               background-size: contain;
               background-position: center;
               background-repeat: no-repeat;
@@ -196,10 +211,10 @@ export default function BingoGenerator() {
               position: absolute;
               top: 0;
               left: 0;
-              width: ${Math.max(0, horizontalScaling)}%;
-              height: ${Math.max(0, verticalScaling)}%;
-              margin-left: ${Math.max(0, horizontalShift)}%;
-              margin-top: ${Math.max(0, verticalShift)}%;
+              width: ${horizontalScaling}%;
+              height: ${verticalScaling}%;
+              margin-left: ${horizontalShift}%;
+              margin-top: ${verticalShift}%;
               display: grid;
               grid-template-columns: repeat(3, 1fr);
               grid-template-rows: repeat(3, 1fr);
@@ -211,7 +226,7 @@ export default function BingoGenerator() {
               align-items: center;
               justify-content: center;
               padding: ${4 * scale}px;
-              font-size: ${12 * scale}px;
+              font-size: ${textSize}rem;
               font-weight: bold;
               text-align: center;
               color: #000;
@@ -223,28 +238,38 @@ export default function BingoGenerator() {
               const frontsideCards = document.querySelectorAll('.frontside');
               const backsideCards = document.querySelectorAll('.backside');
               
-              frontsideCards.forEach(card => {
-                card.style.backgroundImage = 'url(${bingoTemplate.startsWith('/') ? baseURL + bingoTemplate : bingoTemplate})';
-              });
+              const setImageAndAspectRatio = (cards, imageSrc) => {
+                const img = new Image();
+                img.onload = function() {
+                  const aspectRatio = this.width / this.height;
+                  cards.forEach(card => {
+                    card.style.backgroundImage = 'url(' + imageSrc + ')';
+                    card.style.setProperty('--card-aspect-ratio', aspectRatio);
+                  });
+                };
+                img.src = imageSrc;
+              };
               
-              backsideCards.forEach(card => {
-                card.style.backgroundImage = 'url(${bingoBackside.startsWith('/') ? baseURL + bingoBackside : bingoBackside})';
-              });
+              setImageAndAspectRatio(frontsideCards, '${bingoTemplate.startsWith('/') ? baseURL + bingoTemplate : bingoTemplate}');
+              setImageAndAspectRatio(backsideCards, '${bingoBackside.startsWith('/') ? baseURL + bingoBackside : bingoBackside}');
               
               setTimeout(() => {
                 window.print();
-              }, 1000);
+              }, 1500);
             };
           </script>
         </head>
         <body>
           <div class="bingo-card frontside">
             <div class="bingo-grid">
-              ${fields.map((field, index) => `
-                <div class="bingo-cell">
-                  ${field.shortText || field.fullText || `Feld ${index + 1}`}
-                </div>
-              `).join('')}
+              ${displayOrder.map((fieldId) => {
+                const field = fields.find(f => f.id === fieldId);
+                return `
+                  <div class="bingo-cell">
+                    ${field?.shortText || field?.fullText || `Feld ${fieldId}`}
+                  </div>
+                `;
+              }).join('')}
             </div>
           </div>
           
@@ -354,12 +379,26 @@ export default function BingoGenerator() {
           </div>
         </div>
         
-        <div className="flex gap-4 mt-6">
+        <div className="flex gap-4 mt-6 flex-wrap">
           <button
             onClick={resetFields}
             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
           >
             Zurücksetzen
+          </button>
+          
+          <button
+            onClick={randomizeFields}
+            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+          >
+            Felder mischen
+          </button>
+          
+          <button
+            onClick={resetFieldOrder}
+            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+          >
+            Reihenfolge zurücksetzen
           </button>
           
           <button
@@ -414,16 +453,20 @@ export default function BingoGenerator() {
                   marginTop: `${Math.max(0, verticalShift)}%`,
                 }}
               >
-                {fields.map((field) => (
-                  <div 
-                    key={field.id}
-                    className="flex items-center justify-center p-1 text-xs font-bold text-center text-black"
-                  >
-                    <span className="leading-tight">
-                      {field.shortText || field.fullText || `Feld ${field.id}`}
-                    </span>
-                  </div>
-                ))}
+                {displayOrder.map((fieldId) => {
+                  const field = fields.find(f => f.id === fieldId);
+                  return (
+                    <div 
+                      key={fieldId}
+                      className="flex items-center justify-center p-1 font-bold text-center text-black"
+                      style={{ fontSize: `${textSize}rem` }}
+                    >
+                      <span className="leading-tight">
+                        {field?.shortText || field?.fullText || `Feld ${fieldId}`}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -517,6 +560,21 @@ export default function BingoGenerator() {
                   max="100"
                   value={verticalShift}
                   onChange={(e) => setverticalShift(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-black">
+                  Textgröße: {textSize}rem
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value={textSize}
+                  onChange={(e) => setTextSize(parseFloat(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                 />
               </div>
