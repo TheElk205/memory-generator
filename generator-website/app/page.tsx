@@ -491,6 +491,28 @@ export default function MemoryGenerator() {
           </div>
         )}
       </div>
+
+      <footer className="mt-8 py-4 border-t border-gray-200 text-center text-sm text-gray-600">
+        <p>
+          Erstellt mit ❤️ von{" "}
+          <a 
+            href="https://claude.ai" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Claude AI
+          </a>
+          {" "}und{" "}
+          <a 
+            href="mailto:ferdinand@koeppen.tech" 
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            Ferdinand
+          </a>
+          {" "}für die Lebenshilfe Kärnten
+        </p>
+      </footer>
     </div>
   );
 }
