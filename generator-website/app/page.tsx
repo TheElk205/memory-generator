@@ -440,7 +440,7 @@ export default function MemoryGenerator() {
                           <input
                             type="range"
                             min="8"
-                            max="32"
+                            max="64"
                             value={pair.text1Size}
                             onChange={(e) => updateTextSize(pair.id, 'text1Size', parseInt(e.target.value))}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
@@ -476,7 +476,7 @@ export default function MemoryGenerator() {
                           <input
                             type="range"
                             min="8"
-                            max="32"
+                            max="64"
                             value={pair.text2Size}
                             onChange={(e) => updateTextSize(pair.id, 'text2Size', parseInt(e.target.value))}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
