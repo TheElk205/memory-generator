@@ -10,26 +10,28 @@ interface BingoField {
   isFixed: boolean;
 }
 
-export default function BingoGenerator() {
-  const [fields, setFields] = useState<BingoField[]>([
-    { id: 1, fullText: "Erste fixe Aufgabe", shortText: "Fix 1", isFixed: true },
-    { id: 2, fullText: "Zweite fixe Aufgabe", shortText: "Fix 2", isFixed: true },
-    { id: 3, fullText: "Dritte fixe Aufgabe", shortText: "Fix 3", isFixed: true },
-    { id: 4, fullText: "Vierte fixe Aufgabe", shortText: "Fix 4", isFixed: true },
-    { id: 5, fullText: "Fünfte fixe Aufgabe", shortText: "Fix 5", isFixed: true },
-    { id: 6, fullText: "Sechste fixe Aufgabe", shortText: "Fix 6", isFixed: true },
+const defaultQuestions = [
+  { id: 1, fullText: "Besuche einen Vortrag", shortText: "Vortrag", isFixed: true },
+    { id: 2, fullText: "Nimm am Workshop “Speed Kennenlernen” teil", shortText: "Speed Kennenlernen", isFixed: true },
+    { id: 3, fullText: "Nimm am Workshop “Memory” teil", shortText: "Workshop Memory", isFixed: true },
+    { id: 4, fullText: "Nimm am Workshop “Vielfalt-Parcours” teil", shortText: "Workshop Vielfalt", isFixed: true },
+    { id: 5, fullText: "Tausche Kontaktdaten aus oder vernetze dich auf social media", shortText: "Kontaktdaten", isFixed: true },
+    { id: 6, fullText: "Erstelle einen social media post und verlinke die Lebenshilfe", shortText: "Social Media", isFixed: true },
     { id: 7, fullText: "", shortText: "", isFixed: false },
     { id: 8, fullText: "", shortText: "", isFixed: false },
     { id: 9, fullText: "", shortText: "", isFixed: false }
-  ]);
+  
+]
+export default function BingoGenerator() {
+  const [fields, setFields] = useState<BingoField[]>(defaultQuestions);
   const [bingoTemplate, setBingoTemplate] = useState<string>('/bingo-template.png');
   const [bingoBackside, setBingoBackside] = useState<string>('/bingo-backside.png');
   const [advancedMode, setAdvancedMode] = useState<boolean>(false);
-  const [horizontalScaling, setHorizontalScaling] = useState<number>(90);
+  const [horizontalScaling, setHorizontalScaling] = useState<number>(92);
   const [horizontalShift, setHorizontalShift] = useState<number>(4);
   const [verticalScaling, setVerticalScaling] = useState<number>(54);
   const [verticalShift, setverticalShift] = useState<number>(30);
-  const [textSize, setTextSize] = useState<number>(1.1);
+  const [textSize, setTextSize] = useState<number>(0.9);
   const [displayOrder, setDisplayOrder] = useState<number[]>([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
   const baseSize = 200; // Actual preview image size
@@ -77,7 +79,7 @@ export default function BingoGenerator() {
 
     const savedTextSize = localStorage.getItem('bingo-text-size');
     if (savedTextSize) {
-      setTextSize(parseInt(savedTextSize));
+      setTextSize(parseFloat(savedTextSize));
     }
   }, []);
 
@@ -117,22 +119,12 @@ export default function BingoGenerator() {
 
   const resetFields = () => {
     if (confirm('Sind Sie sicher, dass Sie alle Eingaben zurücksetzen möchten?')) {
-      setFields([
-        { id: 1, fullText: "Erste fixe Aufgabe", shortText: "Fix 1", isFixed: true },
-        { id: 2, fullText: "Zweite fixe Aufgabe", shortText: "Fix 2", isFixed: true },
-        { id: 3, fullText: "Dritte fixe Aufgabe", shortText: "Fix 3", isFixed: true },
-        { id: 4, fullText: "Vierte fixe Aufgabe", shortText: "Fix 4", isFixed: true },
-        { id: 5, fullText: "Fünfte fixe Aufgabe", shortText: "Fix 5", isFixed: true },
-        { id: 6, fullText: "Sechste fixe Aufgabe", shortText: "Fix 6", isFixed: true },
-        { id: 7, fullText: "", shortText: "", isFixed: false },
-        { id: 8, fullText: "", shortText: "", isFixed: false },
-        { id: 9, fullText: "", shortText: "", isFixed: false }
-      ]);
-      setHorizontalScaling(90);
+      setFields(defaultQuestions);
+      setHorizontalScaling(92);
       setHorizontalShift(4);
       setVerticalScaling(54);
       setverticalShift(30);
-      setTextSize(1.1);
+      setTextSize(0.9);
     }
   };
 

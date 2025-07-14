@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="32" height="32"></canvas>
+    <br>
+    <button onclick="generateFavicon()">Generate Favicon</button>
+    <br>
+    <a id="download" style="display: none;">Download favicon.ico</a>
+
+    <script>
+        function generateFavicon() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, 32, 32);
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 32, 32);
+            gradient.addColorStop(0, '#16a34a');
+            gradient.addColorStop(1, '#22c55e');
+            
+            // Draw background circle
+            ctx.beginPath();
+            ctx.arc(16, 16, 15, 0, 2 * Math.PI);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = '#059669';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw heart shape
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(16, 24);
+            ctx.bezierCurveTo(12, 20, 8, 16, 8, 12);
+            ctx.bezierCurveTo(8, 8, 12, 8, 16, 12);
+            ctx.bezierCurveTo(20, 8, 24, 8, 24, 12);
+            ctx.bezierCurveTo(24, 16, 20, 20, 16, 24);
+            ctx.fill();
+            
+            // Draw small gear/tool indicator
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.arc(24, 8, 3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(24, 8, 1.5, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw plus symbol
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(7, 6, 1, 4);
+            ctx.fillRect(5, 8, 4, 1);
+            
+            // Convert to ICO
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.getElementById('download');
+                a.href = url;
+                a.download = 'favicon.ico';
+                a.style.display = 'block';
+                a.textContent = 'Download favicon.ico';
+            }, 'image/x-icon');
+        }
+        
+        // Auto-generate on load
+        window.onload = generateFavicon;
+    </script>
+</body>
+</html>
